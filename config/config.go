@@ -341,7 +341,7 @@ func (c Cluster) Config() (*Config, error) {
 			nextAddr := incrementIP(*subnet.lastAllocatedAddr)
 			subnet.lastAllocatedAddr = &nextAddr
 			instance := etcdInstance{
-				IPAddress:	 *subnet.lastAllocatedAddr,
+				IPAddress:   *subnet.lastAllocatedAddr,
 				SubnetIndex: subnetIndex,
 			}
 
