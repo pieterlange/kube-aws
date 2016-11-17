@@ -94,10 +94,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 ## during a cluster upgrade, due to concerns over data loss.
 ## This situation is being rectified with work towards automated management of etcd clusters
 
-# Set this value to the full HTTP/HTTPS endpoint of your existing etcd cluster or leave commented to build a new cluster as part of this stack.
-#etcdLoadBalancer: "http://my.etcd.cluster.local:2379"
-#etcdSecurityGroups: [ "sg-abcdefg", "sg-1234567" ]
-
 # Number of etcd nodes
 # (Set to an odd number >= 3 for HA control plane)
 # etcdCount: 1
@@ -200,6 +196,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     enabled: true
 #     names: [ "manuallymanagedelb" ]
 #     securityGroupIds: [ "sg-87654321" ]
+#   externalEtcd:
+#     enabled: true
+#     etcdUrl: "http://my.etcd.cluster.local:2379"
+#     securityGroupIds: [ "sg-abcdefg", "sg-1234567" ]
 
 # AWS Tags for cloudformation stack resources
 #stackTags:

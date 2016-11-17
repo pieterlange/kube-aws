@@ -327,7 +327,14 @@ func (c *Cluster) baseCreateStackInput() *cloudformation.CreateStackInput {
 	}
 
 	var creq *cloudformation.CreateStackInput
-	if c.EtcdLoadBalancer == "" {
+	if c.Experimental.ExternalEtcd.Enabled {
+		creq = &cloudformation.CreateStackInput{
+			StackName:    aws.String(c.ClusterName),
+			OnFailure:    aws.String(cloudformation.OnFailureDoNothing),
+			Capabilities: []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
+			Tags:         tags,
+		}
+	} else {
 		creq = &cloudformation.CreateStackInput{
 			StackName:    aws.String(c.ClusterName),
 			OnFailure:    aws.String(cloudformation.OnFailureDoNothing),
@@ -351,15 +358,8 @@ func (c *Cluster) baseCreateStackInput() *cloudformation.CreateStackInput {
 }
 `),
 		}
-	} else {
-		creq = &cloudformation.CreateStackInput{
-			StackName:    aws.String(c.ClusterName),
-			OnFailure:    aws.String(cloudformation.OnFailureDoNothing),
-			Capabilities: []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
-			Tags:         tags,
-		}
 	}
-  return creq
+	return creq
 }
 
 func (c *Cluster) createStackFromTemplateBody(cfSvc cloudformationStackCreationService, stackBody string) (*cloudformation.CreateStackOutput, error) {
@@ -488,7 +488,7 @@ func (c *Cluster) Update(stackBody string, s3URI string) (string, error) {
 	s3Svc := s3.New(c.session)
 
 	var err error
-	if c.EtcdLoadBalancer == "" {
+	if !c.Experimental.ExternalEtcd.Enabled {
 		if stackBody, err = c.lockEtcdResources(cfSvc, stackBody); err != nil {
 			return "", err
 		}

@@ -39,6 +39,9 @@ func newDefaultCluster() *Cluster {
 			Disk:       "xvdb",
 			Filesystem: "xfs",
 		},
+		ExternalEtcd{
+			Enabled: false,
+		},
 		LoadBalancer{
 			Enabled: false,
 		},
@@ -169,8 +172,6 @@ type Cluster struct {
 	WorkerRootVolumeIOPS     int               `yaml:"workerRootVolumeIOPS,omitempty"`
 	WorkerRootVolumeSize     int               `yaml:"workerRootVolumeSize,omitempty"`
 	WorkerSpotPrice          string            `yaml:"workerSpotPrice,omitempty"`
-	EtcdLoadBalancer         string            `yaml:"etcdLoadBalancer,omitempty"`
-	EtcdSecurityGroups       []string          `yaml:"etcdSecurityGroups,omitempty"`
 	EtcdCount                int               `yaml:"etcdCount"`
 	EtcdInstanceType         string            `yaml:"etcdInstanceType,omitempty"`
 	EtcdRootVolumeSize       int               `yaml:"etcdRootVolumeSize,omitempty"`
@@ -215,6 +216,7 @@ type Subnet struct {
 type Experimental struct {
 	AwsEnvironment        AwsEnvironment        `yaml:"awsEnvironment"`
 	EphemeralImageStorage EphemeralImageStorage `yaml:"ephemeralImageStorage"`
+	ExternalEtcd          ExternalEtcd          `yaml:"externalEtcd"`
 	LoadBalancer          LoadBalancer          `yaml:"loadBalancer"`
 	NodeDrainer           NodeDrainer           `yaml:"nodeDrainer"`
 	NodeLabel             NodeLabel             `yaml:"nodeLabel"`
@@ -232,18 +234,24 @@ type EphemeralImageStorage struct {
 	Filesystem string `yaml:"filesystem"`
 }
 
-type NodeDrainer struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type NodeLabel struct {
-	Enabled bool `yaml:"enabled"`
+type ExternalEtcd struct {
+	Enabled          bool     `yaml:"enabled"`
+	EtcdUrl          string   `yaml:"etcdUrl"`
+	SecurityGroupIds []string `yaml:"securityGroupIds"`
 }
 
 type LoadBalancer struct {
 	Enabled          bool     `yaml:"enabled"`
 	Names            []string `yaml:"names"`
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
+}
+
+type NodeDrainer struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type NodeLabel struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 type WaitSignal struct {
@@ -311,10 +319,8 @@ func (c Cluster) Config() (*Config, error) {
 	}
 
 	// Use custom etcd cluster if etcdLoadBalancer is set. TODO some minimal URL validation.
-	if config.EtcdLoadBalancer != "" {
-		config.EtcdEndpoints = config.EtcdLoadBalancer
-		// Keep EtcdInitialCluster empty as sign for the template engine to skip etcd node creation
-		config.EtcdInitialCluster = ""
+	if config.Experimental.ExternalEtcd.Enabled {
+		config.EtcdEndpoints = config.Experimental.ExternalEtcd.EtcdUrl
 	} else {
 		config.EtcdInstances = make([]etcdInstance, config.EtcdCount)
 		var etcdEndpoints, etcdInitialCluster bytes.Buffer

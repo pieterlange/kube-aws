@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "kube-aws Kubernetes cluster {{.ClusterName}}",
-  {{if .EtcdInitialCluster}}
+  {{if not .Experimental.ExternalEtcd.Enabled}}
   "Mappings" : {
     "EtcdInstanceParams" : {
       "UserData" : {
@@ -189,7 +189,7 @@
       },
       "Type": "AWS::IAM::InstanceProfile"
     },
-    {{if .EtcdInitialCluster}}
+    {{if not .Experimental.ExternalEtcd.Enabled}}
     "IAMInstanceProfileEtcd": {
       "Properties": {
         "Path": "/",
@@ -373,7 +373,7 @@
       },
       "Type": "AWS::IAM::Role"
     },
-    {{if .EtcdInitialCluster}}
+    {{if not .Experimental.ExternalEtcd.Enabled}}
     "IAMRoleEtcd": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -693,7 +693,7 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
-    {{if .EtcdInitialCluster}}
+    {{if not .Experimental.ExternalEtcd.Enabled}}
     "SecurityGroupControllerIngressFromWorkerToEtcd": {
       "Properties": {
         "FromPort": 2379,
@@ -818,7 +818,7 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
-    {{if .EtcdInitialCluster}}
+    {{if not .Experimental.ExternalEtcd.Enabled}}
     "SecurityGroupEtcdIngressFromControllerToEtcd": {
       "Properties": {
         "FromPort": 2379,
@@ -890,7 +890,7 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     }
-    {{if .EtcdInitialCluster}}
+    {{if not .Experimental.ExternalEtcd.Enabled}}
     ,
     "SecurityGroupEtcd": {
       "Properties": {
@@ -954,7 +954,7 @@
       "Type": "AWS::EC2::SecurityGroupIngress"
     }
     {{else}}
-    {{range $index, $securitygroup := .EtcdSecurityGroups}}
+    {{range $index, $securitygroup := .Experimental.ExternalEtcd.SecurityGroupIds}}
     {{with $securityGroupLogicalName := printf "etcdSecurityGroup%d" $index}}
     ,
     "{{$securityGroupLogicalName}}FromWorker": {
@@ -969,7 +969,7 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
-    "{{$securityGroupLogicalName}}FromWorker": {
+    "{{$securityGroupLogicalName}}FromController": {
       "Properties": {
         "FromPort": 2379,
         "GroupId": "{{$securitygroup}}",
