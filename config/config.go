@@ -34,6 +34,9 @@ func newDefaultCluster() *Cluster {
 		NodeDrainer{
 			Enabled: false,
 		},
+		ExternalEtcd{
+			Enabled: false,
+		},
 	}
 
 	return &Cluster{
@@ -145,8 +148,6 @@ type Cluster struct {
 	WorkerRootVolumeIOPS     int               `yaml:"workerRootVolumeIOPS,omitempty"`
 	WorkerRootVolumeSize     int               `yaml:"workerRootVolumeSize,omitempty"`
 	WorkerSpotPrice          string            `yaml:"workerSpotPrice,omitempty"`
-	EtcdLoadBalancer         string            `yaml:"etcdLoadBalancer,omitempty"`
-	EtcdSecurityGroups       []string          `yaml:"etcdSecurityGroups,omitempty"`
 	EtcdCount                int               `yaml:"etcdCount"`
 	EtcdInstanceType         string            `yaml:"etcdInstanceType,omitempty"`
 	EtcdRootVolumeSize       int               `yaml:"etcdRootVolumeSize,omitempty"`
@@ -186,11 +187,18 @@ type Subnet struct {
 }
 
 type Experimental struct {
-	NodeDrainer NodeDrainer `yaml:"nodeDrainer"`
+	NodeDrainer  NodeDrainer  `yaml:"nodeDrainer"`
+	ExternalEtcd ExternalEtcd `yaml:"nodeDrainer"`
 }
 
 type NodeDrainer struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type ExternalEtcd struct {
+	Enabled          bool     `yaml:"enabled"`
+	EtcdUrl          string   `yaml:"etcdUrl"`
+	SecurityGroupIds []string `yaml:"securityGroupIds"`
 }
 
 const (
@@ -253,10 +261,8 @@ func (c Cluster) Config() (*Config, error) {
 	}
 
 	// Use custom etcd cluster if etcdLoadBalancer is set. TODO some minimal URL validation.
-	if config.EtcdLoadBalancer != "" {
-		config.EtcdEndpoints = config.EtcdLoadBalancer
-		// Keep EtcdInitialCluster empty as sign for the template engine to skip etcd node creation
-		config.EtcdInitialCluster = ""
+	if config.Experimental.ExternalEtcd.Enabled {
+		config.EtcdEndpoints = config.Experimental.ExternalEtcd.EtcdUrl
 	} else {
 		config.EtcdInstances = make([]etcdInstance, config.EtcdCount)
 		var etcdEndpoints, etcdInitialCluster bytes.Buffer
