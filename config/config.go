@@ -37,6 +37,9 @@ func newDefaultCluster() *Cluster {
 		ExternalEtcd{
 			Enabled: false,
 		},
+		AwsEnvironment{
+			Enabled: false,
+		},
 	}
 
 	return &Cluster{
@@ -187,8 +190,9 @@ type Subnet struct {
 }
 
 type Experimental struct {
-	NodeDrainer  NodeDrainer  `yaml:"nodeDrainer"`
-	ExternalEtcd ExternalEtcd `yaml:"externalEtcd"`
+	NodeDrainer    NodeDrainer    `yaml:"nodeDrainer"`
+	ExternalEtcd   ExternalEtcd   `yaml:"externalEtcd"`
+	AwsEnvironment AwsEnvironment `yaml:"awsEnvironment"`
 }
 
 type NodeDrainer struct {
@@ -199,6 +203,11 @@ type ExternalEtcd struct {
 	Enabled          bool     `yaml:"enabled"`
 	EtcdUrl          string   `yaml:"etcdUrl"`
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
+}
+
+type AwsEnvironment struct {
+	Enabled     bool              `yaml:"enabled"`
+	Environment map[string]string `yaml:"environment"`
 }
 
 const (
