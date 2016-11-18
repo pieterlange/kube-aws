@@ -326,21 +326,12 @@ func (c *Cluster) baseCreateStackInput() *cloudformation.CreateStackInput {
 		tags = append(tags, &cloudformation.Tag{Key: &key, Value: &value})
 	}
 
-	var creq *cloudformation.CreateStackInput
+	var stackPolicyBody string
+
 	if c.Experimental.ExternalEtcd.Enabled {
-		creq = &cloudformation.CreateStackInput{
-			StackName:    aws.String(c.ClusterName),
-			OnFailure:    aws.String(cloudformation.OnFailureDoNothing),
-			Capabilities: []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
-			Tags:         tags,
-		}
+		stackPolicyBody = "{}"
 	} else {
-		creq = &cloudformation.CreateStackInput{
-			StackName:    aws.String(c.ClusterName),
-			OnFailure:    aws.String(cloudformation.OnFailureDoNothing),
-			Capabilities: []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
-			Tags:         tags,
-			StackPolicyBody: aws.String(`{
+		stackPolicyBody = `{
   "Statement" : [
     {
       "Effect" : "Deny",
@@ -355,11 +346,15 @@ func (c *Cluster) baseCreateStackInput() *cloudformation.CreateStackInput {
        "Resource" : "*"
      }
   ]
-}
-`),
-		}
+}`
 	}
-	return creq
+	return &cloudformation.CreateStackInput{
+		StackName:       aws.String(c.ClusterName),
+		OnFailure:       aws.String(cloudformation.OnFailureDoNothing),
+		Capabilities:    []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
+		Tags:            tags,
+		StackPolicyBody: aws.String(stackPolicyBody),
+	}
 }
 
 func (c *Cluster) createStackFromTemplateBody(cfSvc cloudformationStackCreationService, stackBody string) (*cloudformation.CreateStackOutput, error) {
