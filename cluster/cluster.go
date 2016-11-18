@@ -329,7 +329,16 @@ func (c *Cluster) baseCreateStackInput() *cloudformation.CreateStackInput {
 	var stackPolicyBody string
 
 	if c.Experimental.ExternalEtcd.Enabled {
-		stackPolicyBody = "{}"
+		stackPolicyBody = `{
+  "Statement" : [
+    {
+      "Effect" : "Allow",
+      "Action" : "Update:*",
+      "Principal" : "*",
+      "Resource" : "*"
+    }
+  ]
+}`
 	} else {
 		stackPolicyBody = `{
   "Statement" : [
