@@ -188,7 +188,7 @@ type Subnet struct {
 
 type Experimental struct {
 	NodeDrainer  NodeDrainer  `yaml:"nodeDrainer"`
-	ExternalEtcd ExternalEtcd `yaml:"nodeDrainer"`
+	ExternalEtcd ExternalEtcd `yaml:"externalEtcd"`
 }
 
 type NodeDrainer struct {
